@@ -3,8 +3,8 @@ Manage read books.
 
 ## Database structure
 ### `book_list`
-| isbn | title | author | publisher | pubsication_date | page_number | tag | link |
-|----|----|----|----|----|----|----|----|
+| isbn | title | author | publisher | pubsication_date | page_number | price | tag | link |
+|----|----|----|----|----|----|----|----|----|
 
 ### `read_book`
 | isbn | date | impression |
