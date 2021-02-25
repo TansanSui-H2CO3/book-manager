@@ -1,0 +1,25 @@
+{
+  "name": "book-manager",
+  "version": "1.0.0",
+  "description": "Book manager and review tool",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github_h2co3:TansanSui-H2CO3/book-manager.git"
+  },
+  "keywords": [
+    "book",
+    "review"
+  ],
+  "author": "TansanSui-H2CO3",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.17.1",
+    "mysql": "^2.18.1",
+    "socket.io": "^3.1.1",
+    "util": "^0.12.3"
+  }
+}
