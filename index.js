@@ -26,8 +26,8 @@ io.on('connection', (socket) => {
     socket.on('book-list', () => {
         getBookList(id, io);
     });
-    socket.on('read-book-list', (data) => {
-
+    socket.on('read-book-list', () => {
+        getReadBookList(id, io);
     });
     socket.on('register-read-book', (data) => {
 
@@ -46,12 +46,24 @@ http.listen(PORT, () => {
 });
 
 async function getBookList(id, io) {
-    let sql, values;
+    let sql;
     try {
         sql = 'select * from book_list;';
         let book_list = await pool.query(sql);
         let data = {book_list: book_list};
         io.to(id).emit('book-list', data);
+    } catch (err) {
+        throw new Error(err);
+    }
+}
+
+async function getReadBookList(id, io) {
+    let sql;
+    try {
+        sql = 'select * from read_book_list;';
+        let read_book_list = await pool.query(sql);
+        let data = {read_book_list: read_book_list};
+        io.to(id).emit('read-book-list', data);
     } catch (err) {
         throw new Error(err);
     }
