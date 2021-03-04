@@ -22,9 +22,9 @@ app.get('/', (req, res) => {
 });
 
 io.on('connection', (socket) => {
-    console.log('User connected');
-    socket.on('book-list', (data) => {
-        
+    let id = socket.id;
+    socket.on('book-list', () => {
+        getBookList(id, io);
     });
     socket.on('read-book-list', (data) => {
 
@@ -44,3 +44,15 @@ io.on('connection', (socket) => {
 http.listen(PORT, () => {
     console.log('Book manager is activated.');
 });
+
+async function getBookList(id, io) {
+    let sql, values;
+    try {
+        sql = 'select * from book_list;';
+        let book_list = await pool.query(sql);
+        let data = {book_list: book_list};
+        io.to(id).emit('book-list', data);
+    } catch (err) {
+        throw new Error(err);
+    }
+}
