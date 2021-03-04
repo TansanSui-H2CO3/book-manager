@@ -6,7 +6,7 @@ Manage read books.
 | isbn | title | author | publisher | pubsication_date | page_number | price | tag | link |
 |----|----|----|----|----|----|----|----|----|
 
-### `read_book`
+### `read_book_list`
 | isbn | date | impression |
 |----|----|----|
 
