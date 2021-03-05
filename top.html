@@ -2,7 +2,54 @@
     <head>
         <title>Book manager | Top page</title>
     </head>
-    <body>
-        <h1>Top page</h1>
+    <body onload="getBookList();">
+        <header></header>
+        <div id="main-contents">
+            <h1 id="title">Top page</h1>
+            <div id="book">
+                <div id="book-list-contents">
+                    <table id="book-list">
+                    </table>
+                </div>
+                <div id="list-controler">
+                    <button id="list-down" onclick="listUp(0);"></button>
+                    <span id="list-number">1</span>
+                    <button id="list-up" onclick="listUp(1);"></button>
+                </div>
+            </div>
+        </div>
+        <footer></footer>
     </body>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        const number_of_book = 10;
+        socket.on('book-list', (information) => {
+            if (0 < information.book_list.length) {
+                let inner_html = '<tr id="book-list-header"></tr>';
+                for (let i = 0; i < information.book_list.length; i++) {
+                    inner_html += '<tr id="book-list-data"></tr>'
+                }
+                document.getElementById('book-list').innerHTML = inner_html;
+            } else {
+                listUp(0);
+            }
+        });
+
+        function getBookList() {
+            let list_number = document.getElementById('list-number').innerHTML;
+            let data = {head: list_number, number_of_data: number_of_book};
+            socket.emit('book-list', data);
+        }
+
+        function listUp(flag) {
+            let list_number = document.getElementById('list-number').innerHTML;
+            if (flag == 0 && list_number != 1) {
+                document.getElementById('list-number').innerHTML = list_number - 1;
+            } else if (flag == 1) {
+                document.getElementById('list-number').innerHTML = list_number + 1;
+            }
+            getBookList();
+        }
+    </script>
 </html>
