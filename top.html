@@ -47,7 +47,7 @@
         async function viewBookList(information) {
             if (0 < information.book_list.length) {
                 let reqURL = 'https://api.openbd.jp/v1/get?isbn=';
-                let inner_html = '<tr id="book-list-header"><th>ISBN</th><th>Title</th><th>Author(s)</th><th>Publisher</th><th>Publication Date</th><th>Number of Pages</th><th>Review</th></tr>';
+                let inner_html = '<tr id="book-list-header"><th>ISBN</th><th>Title</th><th>Author(s)</th><th>Publisher</th><th>Publicing Date</th><th>Page</th><th>Review</th></tr>';
                 for (let i = 0; i < information.book_list.length; i++) {
                     let book_json = await getBookJson(reqURL + information.book_list[i].isbn);
                     console.log(book_json);
