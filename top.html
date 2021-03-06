@@ -69,7 +69,9 @@
             inner_html += '<td>' + json.summary.pubdate + '</td>';
             inner_html += '<td>' + json.summary.volume + '</td>';
             if (book_list.dokuryo) {
-                inner_html += '<td><button class="show-review-btn" onclick="showReview();">Show reviews</button></td>';
+                inner_html += '<td><button class="show-review-btn" onclick="showReview();">Show</button></td>';
+            } else {
+                inner_html += '<td><button class="review-btn" onclick="review();">Register</button></td>';
             }
             inner_html += '</tr>';
             return inner_html;
