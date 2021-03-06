@@ -5,8 +5,17 @@ Manage read books.
 Since the fundamental information of books is obtained from open source, you prepare database about your impressions and reviews.
 
 ### `book` 
-|isbn|read|read_date|impression|
+|isbn|dokuryo|read_date|impression|
 |----|----|----|----|
+
+```sql
+create table book_manager.book (
+    isbn varchar(13),
+    dokuryo boolean,
+    read_date date,
+    impression varchar(500)
+);
+```
 
 ### `review`
 | isbn | date | user_name | comment | evaluation |

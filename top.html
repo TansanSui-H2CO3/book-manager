@@ -12,9 +12,9 @@
                     </table>
                 </div>
                 <div id="list-controler">
-                    <button id="list-down" onclick="listUp(0);"></button>
+                    <button id="list-down" onclick="listUp(0);">Page Down</button>
                     <span id="list-number">1</span>
-                    <button id="list-up" onclick="listUp(1);"></button>
+                    <button id="list-up" onclick="listUp(1);">Page Up</button>
                 </div>
             </div>
         </div>
@@ -25,29 +25,12 @@
         const socket = io();
         let number_of_book = 10;
         socket.on('book-list', (information) => {
-            if (0 < information.book_list.length) {
-                let reqURL = 'https://api.openbd.jp/v1/get?isbn=';
-                let req = new XMLHttpRequest();
-                let inner_html = '<tr id="book-list-header"><th>ISBN</th><th>Title</th><th>Author(s)</th><th>Publisher</th><th>Publication Date</th><th>Number of Pages</th><th>Review</th></tr>';
-                for (let i = 0; i < information.book_list.length; i++) {
-                    req.open('get', reqURL + information.book_list[i].isbn);
-                    req.responseType = 'json';
-                    req.send();
-                    req.onload = function() {
-                        console.log(req.response[0]);
-                    }
-                    inner_html += '<tr id="book-list-data"></tr>';
-                }
-                document.getElementById('book-list').innerHTML = inner_html;
-            } else {
-                console.log('no data');
-                // listUp(0);
-            }
+            viewBookList(information);
         });
 
         function getBookList() {
             let list_number = document.getElementById('list-number').innerHTML;
-            let data = {head: list_number, number_of_data: number_of_book};
+            let data = {head: (list_number - 1) * number_of_book + 1, number_of_data: number_of_book};
             socket.emit('book-list', data);
         }
 
@@ -56,9 +39,34 @@
             if (flag == 0 && list_number != 1) {
                 document.getElementById('list-number').innerHTML = list_number - 1;
             } else if (flag == 1) {
-                document.getElementById('list-number').innerHTML = list_number + 1;
+                document.getElementById('list-number').innerHTML = +list_number + 1;
             }
             getBookList();
+        }
+
+        async function viewBookList(information) {
+            if (0 < information.book_list.length) {
+                let reqURL = 'https://api.openbd.jp/v1/get?isbn=';
+                let inner_html = '<tr id="book-list-header"><th>ISBN</th><th>Title</th><th>Author(s)</th><th>Publisher</th><th>Publication Date</th><th>Number of Pages</th><th>Review</th></tr>';
+                for (let i = 0; i < information.book_list.length; i++) {
+                    const res = await fetch(reqURL + information.book_list[i].isbn);
+                    const json = (await res.json())[0];
+                    inner_html += '<tr id="book-list-data">';
+                    inner_html += '<td>' + json.summary.isbn + '</td>';
+                    inner_html += '<td>' + json.summary.title + '</td>';
+                    inner_html += '<td>' + json.summary.author + '</td>';
+                    inner_html += '<td>' + json.summary.publisher + '</td>';
+                    inner_html += '<td>' + json.summary.pubdate + '</td>';
+                    inner_html += '<td>' + json.summary.volume + '</td>';
+                    if (information.book_list[i].dokuryo) {
+                        inner_html += '<td><button class="show-review-btn" onclick="showReview();">Show reviews</button></td>';
+                    }
+                    inner_html += '</tr>';
+                    document.getElementById('book-list').innerHTML = inner_html;
+                }
+            } else {
+                listUp(0);
+            }
         }
     </script>
 </html>

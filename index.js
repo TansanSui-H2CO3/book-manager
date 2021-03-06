@@ -56,8 +56,8 @@ exports.startServer = () => {
 async function getBookList(id, io, data, pool) {
     let sql;
     try {
-        sql = 'select * from book_list limit ?, ?;';
-        values = [data.head, data.number_of_data];
+        sql = 'select * from book limit ?, ?;';
+        values = [data.head - 1, data.number_of_data];
         let book_list = await pool.query(mysql.format(sql, values));
         let information = {book_list: book_list};
         io.to(id).emit('book-list', information);
