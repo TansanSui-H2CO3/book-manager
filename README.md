@@ -2,13 +2,11 @@
 Manage read books.
 
 ## Database structure
-### `book_list`
-| isbn | title | author | publisher | pubsication_date | page_number | price | tag | link |
-|----|----|----|----|----|----|----|----|----|
+Since the fundamental information of books is obtained open source, you prepare database about your impressions and reviews.
 
-### `read_book_list`
-| isbn | date | impression |
-|----|----|----|
+### `book` 
+|isbn|read|read_date|impression|
+|----|----|----|----|
 
 ### `review`
 | isbn | date | user_name | comment | evaluation |
