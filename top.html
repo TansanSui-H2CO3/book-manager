@@ -49,24 +49,30 @@
                 let reqURL = 'https://api.openbd.jp/v1/get?isbn=';
                 let inner_html = '<tr id="book-list-header"><th>ISBN</th><th>Title</th><th>Author(s)</th><th>Publisher</th><th>Publication Date</th><th>Number of Pages</th><th>Review</th></tr>';
                 for (let i = 0; i < information.book_list.length; i++) {
-                    const res = await fetch(reqURL + information.book_list[i].isbn);
-                    const json = (await res.json())[0];
-                    inner_html += '<tr id="book-list-data">';
-                    inner_html += '<td>' + json.summary.isbn + '</td>';
-                    inner_html += '<td>' + json.summary.title + '</td>';
-                    inner_html += '<td>' + json.summary.author + '</td>';
-                    inner_html += '<td>' + json.summary.publisher + '</td>';
-                    inner_html += '<td>' + json.summary.pubdate + '</td>';
-                    inner_html += '<td>' + json.summary.volume + '</td>';
-                    if (information.book_list[i].dokuryo) {
-                        inner_html += '<td><button class="show-review-btn" onclick="showReview();">Show reviews</button></td>';
-                    }
-                    inner_html += '</tr>';
-                    document.getElementById('book-list').innerHTML = inner_html;
+                    inner_html += await getBookJson(reqURL + information.book_list[i].isbn, information.book_list[i]);
                 }
+                document.getElementById('book-list').innerHTML = inner_html;
             } else {
                 listUp(0);
             }
+        }
+
+        async function getBookJson(reqURL, book_list) {
+            const res = await fetch(reqURL);
+            const json = (await res.json())[0];
+            let inner_html = '';
+            inner_html += '<tr id="book-list-data">';
+            inner_html += '<td>' + json.summary.isbn + '</td>';
+            inner_html += '<td>' + json.summary.title + '</td>';
+            inner_html += '<td>' + json.summary.author + '</td>';
+            inner_html += '<td>' + json.summary.publisher + '</td>';
+            inner_html += '<td>' + json.summary.pubdate + '</td>';
+            inner_html += '<td>' + json.summary.volume + '</td>';
+            if (book_list.dokuryo) {
+                inner_html += '<td><button class="show-review-btn" onclick="showReview();">Show reviews</button></td>';
+            }
+            inner_html += '</tr>';
+            return inner_html;
         }
     </script>
 </html>
