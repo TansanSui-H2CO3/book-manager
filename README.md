@@ -2,7 +2,7 @@
 Manage read books.
 
 ## Database structure
-Since the fundamental information of books is obtained open source, you prepare database about your impressions and reviews.
+Since the fundamental information of books is obtained from open source, you prepare database about your impressions and reviews.
 
 ### `book` 
 |isbn|read|read_date|impression|
