@@ -20,3 +20,7 @@ create table book_manager.book (
 ### `review`
 | isbn | date | user_name | comment | evaluation |
 |----|----|----|----|----|
+
+## References
+### APIs
+- [openBD](https://openbd.jp/)
