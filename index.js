@@ -6,13 +6,19 @@ let app = express();
 let http = require('http').Server(app);
 const io = require('socket.io')(http);
 const PORT = process.env.PORT || 8080; // Default port number
+let db_information = ['', '', '', ''];
+
+// Set DB info
+exports.setDataBaseInformation = (host, user, password, database) => {
+    db_information = [host, user, password, database];
+};
 
 // DB connection
 const pool = mysql.createPool({
-    host: 'host_name',
-    user: 'user_name',
-    password: 'password',
-    database: 'database',
+    host: db_information[0],
+    user: db_information[1],
+    password: db_information[2],
+    database: db_information[3],
 });
 pool.query = util.promisify(pool.query);
 

@@ -23,16 +23,25 @@
     <script src="/socket.io/socket.io.js"></script>
     <script>
         const socket = io();
-        const number_of_book = 10;
+        let number_of_book = 10;
         socket.on('book-list', (information) => {
             if (0 < information.book_list.length) {
-                let inner_html = '<tr id="book-list-header"></tr>';
+                let reqURL = 'https://api.openbd.jp/v1/get?isbn=';
+                let req = new XMLHttpRequest();
+                let inner_html = '<tr id="book-list-header"><th>ISBN</th><th>Title</th><th>Author(s)</th><th>Publisher</th><th>Publication Date</th><th>Number of Pages</th><th>Review</th></tr>';
                 for (let i = 0; i < information.book_list.length; i++) {
+                    req.open('get', reqURL + information.book_list[i].isbn);
+                    req.responseType = 'json';
+                    req.send();
+                    req.onload = function() {
+                        console.log(req.response[0]);
+                    }
                     inner_html += '<tr id="book-list-data"></tr>';
                 }
                 document.getElementById('book-list').innerHTML = inner_html;
             } else {
-                listUp(0);
+                console.log('no data');
+                // listUp(0);
             }
         });
 
