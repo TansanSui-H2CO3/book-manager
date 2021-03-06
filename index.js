@@ -13,45 +13,47 @@ exports.setDataBaseInformation = (host, user, password, database) => {
     db_information = [host, user, password, database];
 };
 
-// DB connection
-const pool = mysql.createPool({
-    host: db_information[0],
-    user: db_information[1],
-    password: db_information[2],
-    database: db_information[3],
-});
-pool.query = util.promisify(pool.query);
-
-// Routing
-app.get('/', (req, res) => {
-    res.sendFile(__dirname + '/top.html');
-});
-
-io.on('connection', (socket) => {
-    let id = socket.id;
-    socket.on('book-list', (data) => {
-        getBookList(id, io, data);
+exports.startServer = () => {
+    // DB connection
+    const pool = mysql.createPool({
+        host: db_information[0],
+        user: db_information[1],
+        password: db_information[2],
+        database: db_information[3],
     });
-    socket.on('read-book-list', (data) => {
-        getReadBookList(id, io, data);
-    });
-    socket.on('register-read-book', (data) => {
+    pool.query = util.promisify(pool.query);
 
+    // Routing
+    app.get('/', (req, res) => {
+        res.sendFile(__dirname + '/top.html');
     });
-    socket.on('register-review', (data) => {
 
+    io.on('connection', (socket) => {
+        let id = socket.id;
+        socket.on('book-list', (data) => {
+            getBookList(id, io, data, pool);
+        });
+        socket.on('read-book-list', (data) => {
+            getReadBookList(id, io, data, pool);
+        });
+        socket.on('register-read-book', (data) => {
+
+        });
+        socket.on('register-review', (data) => {
+
+        });
+        socket.on('disconnect', () => {
+            console.log('User disconnected');
+        });
     });
-    socket.on('disconnect', () => {
-        console.log('User disconnected');
+
+    // Listening
+    http.listen(PORT, () => {
+        console.log('Book manager is activated.');
     });
-});
+}
 
-// Listening
-http.listen(PORT, () => {
-    console.log('Book manager is activated.');
-});
-
-async function getBookList(id, io, data) {
+async function getBookList(id, io, data, pool) {
     let sql;
     try {
         sql = 'select * from book_list limit ?, ?;';
@@ -64,7 +66,7 @@ async function getBookList(id, io, data) {
     }
 }
 
-async function getReadBookList(id, io, data) {
+async function getReadBookList(id, io, data, pool) {
     let sql;
     try {
         sql = 'select * from read_book_list limit ?, ?;';
