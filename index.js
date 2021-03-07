@@ -3,6 +3,7 @@ const mysql = require('mysql');
 const util = require('util');
 let express = require('express');
 let app = express();
+app.use(express.static('source'));
 let http = require('http').Server(app);
 const io = require('socket.io')(http);
 const PORT = process.env.PORT || 8080; // Default port number
@@ -26,6 +27,9 @@ exports.startServer = () => {
     // Routing
     app.get('/', (req, res) => {
         res.sendFile(__dirname + '/top.html');
+    });
+    app.get('/spoiler/[0-9]*', (req, res) => {
+        res.sendFile(__dirname + '/spoiler.html');
     });
 
     io.on('connection', (socket) => {

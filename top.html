@@ -4,7 +4,7 @@
     </head>
     <body onload="getBookList();">
         <header>
-            <a href="/"><img id="logo" src="logo.png" alt=""></a>
+            <a href="/"><img id="logo" src="/image/logo.png" alt="" style="height: 60px;"></a>
             <a href="/register">Register</a>
             <a href="/review">Review</a>
         </header>
@@ -73,11 +73,12 @@
                         inner_html += '<td>---</td>';
                     }
                     if (information.book_list[i].dokuryo) {
-                        inner_html += '<td><button class="view-btn" onclick="view();">View</button></td>';
+                        // inner_html += '<td><button class="view-btn" onclick="view();">View</button></td>';
+                        inner_html += '<td></td>'
                     } else {
                         inner_html += '<td><button class="review-btn" onclick="review();">Review</button></td>';
-                        inner_html += '<td><button class="spoiler-btn" onclick="spoiler();">Spoiler</button></td>';
                     }
+                    inner_html += '<td><button class="spoiler-btn" onclick="spoiler(' + book_json.onix.RecordReference + ');">Spoiler</button></td>';
                     inner_html += '</tr>';
                 }
                 document.getElementById('book-list').innerHTML = inner_html;
@@ -90,6 +91,10 @@
             const res = await fetch(reqURL);
             const book_json = (await res.json())[0];
             return book_json;
+        }
+
+        function spoiler(isbn) {
+            window.location.href = '/spoiler/' + isbn;
         }
     </script>
 </html>

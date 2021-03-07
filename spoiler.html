@@ -1,0 +1,59 @@
+<html>
+    <head>
+        <title>Book manager | Spoiler</title>
+    </head>
+    <body onload="show();">
+        <head>
+            <a href="/"><img id="logo" src="/image/logo.png" alt="" style="height: 60px;"></a>
+            <a href="/register">Register</a>
+            <a href="/review">Review</a>
+        </head>
+        <div id="main-content">
+            <h1>Spoiler of #<span id="isbn"></span></h1>
+            <span id="load-error"></span>
+            <div id="book-information">
+                <div>Title: <span id="book-title"></span></div>
+                <div>Author(s): <span id="book-author"></span></div>
+                <div>Publisher: <span id="book-publisher"></span></div>
+                <div>Publishing Date: <span id="book-publishing-date"></span></div>
+                <div>Page: <span id="book-page"></span></div>
+                <div><span id="book-image"></span></div>
+            </div>
+        </div>
+        <footer></footer>
+    </body>
+    <script>
+        async function show() {
+            let isbn = location.href.split('/')[location.href.split('/').length - 1];
+            let book_json = await getBookJson(isbn);
+            console.log(book_json);
+            if (book_json != null) {
+                document.getElementById('isbn').innerHTML = isbn;
+            } else {
+                document.getElementById('load-error').innerHTML = '#' + isbn + ' is not published.';
+                return false;
+            }
+            document.getElementById('book-title').innerHTML = book_json.onix.DescriptiveDetail.TitleDetail.TitleElement.TitleText.content;
+            let author = '<a href="#" onclick="">' + book_json.onix.DescriptiveDetail.Contributor[0].PersonName.content + '</a>';
+            for (let j = 1; j < book_json.onix.DescriptiveDetail.Contributor.length; j++) {
+                author += ', <a href="#" onclick="">' + book_json.onix.DescriptiveDetail.Contributor[j].PersonName.content + '</a>';
+            }
+            document.getElementById('book-author').innerHTML = author;
+            document.getElementById('book-publisher').innerHTML = book_json.onix.PublishingDetail.Imprint.ImprintName;
+            document.getElementById('book-publishing-date').innerHTML = book_json.onix.PublishingDetail.PublishingDate[0].Date;
+            if (book_json.onix.DescriptiveDetail.Extent != null) {
+                document.getElementById('book-page').innerHTML = book_json.onix.DescriptiveDetail.Extent[0].ExtentValue;
+            } else {
+                document.getElementById('book-page').innerHTML = 'No data';
+            }
+            document.getElementById('book-image').innerHTML = '<img src="' + book_json.onix.CollateralDetail.SupportingResource[0].ResourceVersion[0].ResourceLink + '">';
+        }
+
+        async function getBookJson(isbn) {
+            let baseURL = 'https://api.openbd.jp/v1/get?isbn=';
+            const res = await fetch(baseURL + isbn);
+            const book_json = (await res.json())[0];
+            return book_json;
+        }
+    </script>
+</html>
