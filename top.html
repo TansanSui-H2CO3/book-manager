@@ -1,6 +1,7 @@
 <html>
     <head>
         <title>Book manager | Top page</title>
+        <link rel="stylesheet" href="/css/top.css">
     </head>
     <body onload="getBookList();">
         <header>
@@ -11,6 +12,7 @@
             <div id="book">
                 <h2>Book Shelf</h2>
                 <h3>Terms of Searching: <span id="searching-term">Nothing (All books are displayed)</span></h3>
+                <div>User Name: <input id="user-name" type="text" onchange=""><button onclick="getBookList();">Search</button></div>
                 <div id="book-list-contents">
                     <table id="book-list">
                     </table>
@@ -32,9 +34,10 @@
             viewBookList(information);
         });
 
-        function getBookList() {
+        function getBookList(condition = '', order = '') {
             let list_number = document.getElementById('list-number').innerHTML;
-            let data = {head: (list_number - 1) * number_of_book + 1, number_of_data: number_of_book};
+            let user_name = document.getElementById('user-name').value;
+            let data = {head: (list_number - 1) * number_of_book + 1, number_of_data: number_of_book, user_name: user_name, condition: condition, order: order};
             socket.emit('book-list', data);
         }
 
@@ -52,19 +55,34 @@
             if (0 < information.book_list.length) {
                 let reqURL = 'https://api.openbd.jp/v1/get?isbn=';
                 let inner_html = '<tr id="book-list-header"><th>ISBN</th><th>Title</th><th>Author(s)</th><th>Publisher</th><th>Publicing Date</th><th>Page</th><th>Spoiler</th></tr>';
+                let spoiled_book_list = [];
+                for (let i = 0; i < information.spoiled_book_list.length; i++) {
+                    spoiled_book_list.push(information.spoiled_book_list[i].isbn);
+                }
                 for (let i = 0; i < information.book_list.length; i++) {
                     let book_json = await getBookJson(reqURL + information.book_list[i].isbn);
                     console.log(book_json);
-                    inner_html += '<tr id="book-list-data">';
+                    if (spoiled_book_list.includes(information.book_list[i].isbn)) {
+                        inner_html += '<tr id="book-list-data" class="spoiled-book">';
+                    } else {
+                        inner_html += '<tr id="book-list-data">';
+                    }
                     inner_html += '<td>' + book_json.onix.RecordReference + '</td>';
                     inner_html += '<td>' + book_json.onix.DescriptiveDetail.TitleDetail.TitleElement.TitleText.content + '</td>';
-                    inner_html += '<td><a href="#" onclick="">' + book_json.onix.DescriptiveDetail.Contributor[0].PersonName.content + '</a>';
-                    for (let j = 1; j < book_json.onix.DescriptiveDetail.Contributor.length; j++) {
-                        inner_html += ', <a href="#" onclick="">' + book_json.onix.DescriptiveDetail.Contributor[j].PersonName.content + '</a>';
+                    // Validate authors
+                    if (book_json.onix.DescriptiveDetail.Contributor[0] != null) {
+                        inner_html += '<td><a href="#" onclick="">' + book_json.onix.DescriptiveDetail.Contributor[0].PersonName.content + '</a>';
+                        for (let j = 1; j < book_json.onix.DescriptiveDetail.Contributor.length; j++) {
+                            inner_html += ', <a href="#" onclick="">' + book_json.onix.DescriptiveDetail.Contributor[j].PersonName.content + '</a>';
+                        }
+                        inner_html += '</td>';
+                    } else {
+                        inner_html += '<td></td>'
                     }
-                    inner_html += '</td>';
                     inner_html += '<td>' + book_json.onix.PublishingDetail.Imprint.ImprintName + '</td>';
                     inner_html += '<td>' + book_json.onix.PublishingDetail.PublishingDate[0].Date + '</td>';
+                    
+                    // Validate page number
                     if (book_json.onix.DescriptiveDetail.Extent != null) {
                         inner_html += '<td>' + book_json.onix.DescriptiveDetail.Extent[0].ExtentValue + '</td>';
                     } else {

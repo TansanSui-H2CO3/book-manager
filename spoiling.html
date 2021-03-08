@@ -1,13 +1,13 @@
 <html>
     <head>
-        <title>Book manager | Spoiler</title>
+        <title>Book manager | Spoiling</title>
     </head>
     <body onload="show();">
         <head>
             <a href="/"><img id="logo" src="/image/logo.svg" alt="" style="height: 60px;"></a>
         </head>
         <div id="main-content">
-            <h1>Spoiler of #<span id="isbn"></span></h1>
+            <h1>Spoiling about #<span id="isbn"></span></h1>
             <span id="load-error"></span>
             <div id="book-information">
                 <div>Title: <span id="book-title"></span></div>
@@ -17,13 +17,22 @@
                 <div>Page: <span id="book-page"></span></div>
                 <div><span id="book-image"></span></div>
             </div>
-            <div>
-                <button id="spoile-btn" onclick="spoile();">Spoile</button>
+            <div id="spoiling-field">
+                <div>Contents: <input id="spoiler" type="textarea"></div>
+                <div>User Name: <input id="user-name" type="text"></div>
+                <div>Password: <input id="password" type="password"></div>
+                <div><button id="spoile-btn" onclick="spoiling();">Spoile</button></div>
             </div>
         </div>
         <footer></footer>
     </body>
+    <script src="/socket.io/socket.io.js"></script>
     <script>
+        const socket = io();
+        socket.on('success', (information) => {
+            window.location.href = '/spoiler/' + document.getElementById('isbn').innerHTML;
+        });
+
         async function show() {
             let isbn = location.href.split('/')[location.href.split('/').length - 1];
             let book_json = await getBookJson(isbn);
@@ -33,9 +42,9 @@
                 document.getElementById('load-error').innerHTML = '#' + isbn + ' is not published.';
                 return false;
             }
-            
+
             document.getElementById('book-title').innerHTML = book_json.onix.DescriptiveDetail.TitleDetail.TitleElement.TitleText.content;
-            
+
             let author = '';
             if (book_json.onix.DescriptiveDetail.Contributor[0] != null) {
                 author = '<a href="#" onclick="">' + book_json.onix.DescriptiveDetail.Contributor[0].PersonName.content + '</a>';
@@ -67,9 +76,13 @@
             return book_json;
         }
 
-        function spoile() {
+        function spoiling() {
             let isbn = document.getElementById('isbn').innerHTML;
-            window.location.href = '/spoiling/' + isbn;
+            let spoiler = document.getElementById('spoiler').value;
+            let user_name = document.getElementById('user-name').value;
+            let password = document.getElementById('password').value;
+            let data = {isbn: isbn, user_name: user_name, spoiler: spoiler, password: password};
+            socket.emit('spoiler', data);
         }
     </script>
 </html>

@@ -31,20 +31,17 @@ exports.startServer = () => {
     app.get('/spoiler/[0-9]*', (req, res) => {
         res.sendFile(__dirname + '/spoiler.html');
     });
+    app.get('/spoiling/[0-9]*', (req, res) => {
+        res.sendFile(__dirname + '/spoiling.html');
+    });
 
     io.on('connection', (socket) => {
         let id = socket.id;
         socket.on('book-list', (data) => {
             getBookList(id, io, data, pool);
         });
-        socket.on('read-book-list', (data) => {
-            getReadBookList(id, io, data, pool);
-        });
-        socket.on('register-read-book', (data) => {
-
-        });
-        socket.on('register-review', (data) => {
-
+        socket.on('spoiler', (data) => {
+            setSpoiler(id, io, data, pool);
         });
         socket.on('disconnect', () => {
             console.log('User disconnected');
@@ -58,27 +55,71 @@ exports.startServer = () => {
 }
 
 async function getBookList(id, io, data, pool) {
-    let sql;
+    let sql, values;
     try {
-        sql = 'select * from book limit ?, ?;';
+        sql = 'select * from book order by isbn asc limit ?, ?;';
         values = [data.head - 1, data.number_of_data];
         let book_list = await pool.query(mysql.format(sql, values));
-        let information = {book_list: book_list};
+        let spoiled_book_list = [];
+        if (data.user_name != '') {
+            sql = 'select isbn from spoiler where user_name=?;';
+            values = [data.user_name];
+            spoiled_book_list = await pool.query(mysql.format(sql, values));
+        }
+        let information = {book_list: book_list, spoiled_book_list: spoiled_book_list};
         io.to(id).emit('book-list', information);
     } catch (err) {
         throw new Error(err);
     }
 }
 
-async function getReadBookList(id, io, data, pool) {
-    let sql;
+async function setSpoiler(id, io, data, pool) {
+    let sql, values;
     try {
-        sql = 'select * from read_book_list limit ?, ?;';
-        values = [data.head, data.number_of_data];
-        let read_book_list = await pool.query(mysql.format(sql, values));
-        let information = {read_book_list: read_book_list};
-        io.to(id).emit('read-book-list', information);
+        // Matching user
+        sql = 'select * from user where user_name=? and password=?;';
+        values = [data.user_name, data.password];
+        let user = await pool.query(mysql.format(sql, values));
+
+        if (0 < user.length) {
+            // Check book table
+            sql = 'select isbn from book where isbn=?;';
+            values = [data.isbn];
+            let book = await pool.query(mysql.format(sql, values));
+            if (book.length == 0) {
+                sql = 'insert into book values (?, ?, ?, ?);';
+                values = [data.isbn, false, null, ''];
+                await pool.query(mysql.format(sql, values));
+            }
+
+            // Search previous spoiler
+            sql = 'select * from spoiler where isbn=? and user_name=?;';
+            values = [data.isbn, data.user_name];
+            let spoiler = await pool.query(mysql.format(sql, values));
+
+            if (0 < spoiler.length) {
+                // Update spoiler
+                sql = 'update spoiler set spoiled_date=?, spoiler=?, evaluation=?, up_vote=?, down_vote=?, visible=? where isbn=? and user_name=?;';
+                values = [getDate(), data.spoiler, 5, 0, 0, true, data.isbn, data.user_name];
+                await pool.query(mysql.format(sql, values));
+            } else {
+                // Set new spoiler
+                sql = 'insert into spoiler values (?, ?, ?, ?, ?, ?, ?, ?, ?);';
+                values = [1, data.isbn, getDate(), data.user_name, data.spoiler, 5, 0, 0, true];
+                await pool.query(mysql.format(sql, values));
+            }
+
+            // Send 'success' event
+            io.to(id).emit('success');
+        } else {
+            io.to(id).emit('invalid-access');
+        }
     } catch (err) {
         throw new Error(err);
     }
+}
+
+function getDate() {
+    let dt = new Date();
+    return dt.getFullYear() + '-' + (+dt.getMonth() + 1) + '-' + dt.getDate();
 }
