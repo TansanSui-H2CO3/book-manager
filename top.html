@@ -5,8 +5,6 @@
     <body onload="getBookList();">
         <header>
             <a href="/"><img id="logo" src="/image/logo.svg" alt="" style="height: 60px;"></a>
-            <a href="/register">Register</a>
-            <a href="/review">Review</a>
         </header>
         <div id="main-contents">
             <h1 id="title">Top page</h1>
@@ -53,12 +51,12 @@
         async function viewBookList(information) {
             if (0 < information.book_list.length) {
                 let reqURL = 'https://api.openbd.jp/v1/get?isbn=';
-                let inner_html = '<tr id="book-list-header"><th>ISBN</th><th>Title</th><th>Author(s)</th><th>Publisher</th><th>Publicing Date</th><th>Page</th><th>Review</th><th>Spoiler</th></tr>';
+                let inner_html = '<tr id="book-list-header"><th>ISBN</th><th>Title</th><th>Author(s)</th><th>Publisher</th><th>Publicing Date</th><th>Page</th><th>Spoiler</th></tr>';
                 for (let i = 0; i < information.book_list.length; i++) {
                     let book_json = await getBookJson(reqURL + information.book_list[i].isbn);
                     console.log(book_json);
                     inner_html += '<tr id="book-list-data">';
-                    inner_html += '<td><a href="/">' + book_json.onix.RecordReference + '</a></td>';
+                    inner_html += '<td>' + book_json.onix.RecordReference + '</td>';
                     inner_html += '<td>' + book_json.onix.DescriptiveDetail.TitleDetail.TitleElement.TitleText.content + '</td>';
                     inner_html += '<td><a href="#" onclick="">' + book_json.onix.DescriptiveDetail.Contributor[0].PersonName.content + '</a>';
                     for (let j = 1; j < book_json.onix.DescriptiveDetail.Contributor.length; j++) {
@@ -71,12 +69,6 @@
                         inner_html += '<td>' + book_json.onix.DescriptiveDetail.Extent[0].ExtentValue + '</td>';
                     } else {
                         inner_html += '<td>---</td>';
-                    }
-                    if (information.book_list[i].dokuryo) {
-                        // inner_html += '<td><button class="view-btn" onclick="view();">View</button></td>';
-                        inner_html += '<td></td>'
-                    } else {
-                        inner_html += '<td><button class="review-btn" onclick="review();">Review</button></td>';
                     }
                     inner_html += '<td><button class="spoiler-btn" onclick="spoiler(' + book_json.onix.RecordReference + ');">Spoiler</button></td>';
                     inner_html += '</tr>';
