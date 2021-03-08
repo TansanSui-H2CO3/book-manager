@@ -17,13 +17,42 @@ create table book_manager.book (
 );
 ```
 
-### `review`
-| isbn | date | user_name | comment | evaluation |
-|----|----|----|----|----|
+### `spoiler`
+| id | isbn | spoiled_date | user_name | spoiler | evaluation | up_vote | down_vote | visible |
+|----|----|----|----|----|----|----|----|----|
+
+```sql
+create table book_manager.spoiler (
+    id int,
+    isbn varchar(13),
+    spoiled_date date,
+    user_name varchar(50),
+    spoiler varchar(500),
+    evaluation int,
+    up_vote int,
+    down_vote int,
+    visible boolean
+);
+```
+
+### `user`
+| user_name | email | password | twitter_id | profiel | administrator |
+|----|----|----|----|----|----|
+
+```sql
+create table book_manager.user (
+    user_name varchar(50),
+    email varchar(256),
+    password varchar(256),
+    twitter_id varchar(15),
+    profiel varchar(140),
+    administrator boolean
+);
+```
 
 ## References
 ### APIs
 - [openBD](https://openbd.jp/)
 
 ### Web sites
-- [書籍検索APIのリクエストパラメータ・取得値考察](https://qiita.com/kanary/items/5ec45bbc01efd4388fdb)
+- [譖ｸ邀肴､懃ｴ｢API縺ｮ繝ｪ繧ｯ繧ｨ繧ｹ繝医ヱ繝ｩ繝｡繝ｼ繧ｿ繝ｻ蜿門ｾ怜､閠�蟇歉(https://qiita.com/kanary/items/5ec45bbc01efd4388fdb)
