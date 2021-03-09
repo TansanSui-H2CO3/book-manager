@@ -3,7 +3,7 @@
         <title>Book manager | Top page</title>
         <link rel="stylesheet" href="/css/top.css">
     </head>
-    <body onload="getBookList();">
+    <body onload="getBookList();searchUser();">
         <header>
             <a href="/"><img id="logo" src="/image/logo.svg" alt="" style="height: 60px;"></a>
         </header>
@@ -12,7 +12,8 @@
             <div id="book">
                 <h2>Book Shelf</h2>
                 <h3>Terms of Searching: <span id="searching-term">Nothing (All books are displayed)</span></h3>
-                <div>User Name: <input id="user-name" type="text" onchange=""><button onclick="getBookList();">Search</button></div>
+                <div>Keyword: <input id="keyword" type="text" onchange=""><button onclick="search();">Search</button></div>
+                <div>User Name: <input id="user-name" type="text" onchange=""><button onclick="searchUser();">Mark up</button></div>
                 <div id="book-list-contents">
                     <table id="book-list">
                     </table>
@@ -31,45 +32,64 @@
         const socket = io();
         let number_of_book = 10;
         socket.on('book-list', (information) => {
-            viewBookList(information);
+            let isbn = [];
+            for (let i = 0; i < information.isbn.length; i++) {
+                isbn.push(information.isbn[i].isbn);
+            }
+            viewBookList(isbn);
+        });
+        socket.on('mark-up', (information) => {
+            let isbn = [];
+            for (let i = 0; i < information.isbn.length; i++) {
+                isbn.push(information.isbn[i].isbn);
+            }
+            markUp(isbn);
         });
 
-        function getBookList(condition = '', order = '') {
+        async function getBookList() {
+            let keyword = document.getElementById('keyword').value.split(' ');
+            if (keyword[0] == null) {
+                await viewBookList(await (jsonFromGoogleApi(keyword)));
+                return 0;
+            }
             let list_number = document.getElementById('list-number').innerHTML;
-            let user_name = document.getElementById('user-name').value;
-            let data = {head: (list_number - 1) * number_of_book + 1, number_of_data: number_of_book, user_name: user_name, condition: condition, order: order};
+            let data = {head: (list_number - 1) * number_of_book + 1, number_of_data: number_of_book};
             socket.emit('book-list', data);
         }
 
-        function listUp(flag) {
-            let list_number = document.getElementById('list-number').innerHTML;
-            if (flag == 0 && list_number != 1) {
-                document.getElementById('list-number').innerHTML = list_number - 1;
-            } else if (flag == 1) {
-                document.getElementById('list-number').innerHTML = +list_number + 1;
-            }
-            getBookList();
+        async function jsonFromOpenBD(isbn) {
+            let reqUrl = 'https://api.openbd.jp/v1/get?isbn=' + isbn;
+            const res = await fetch(reqUrl);
+            const book_json = (await res.json())[0];
+            return book_json;
         }
 
-        async function viewBookList(information) {
-            if (0 < information.book_list.length) {
-                let reqURL = 'https://api.openbd.jp/v1/get?isbn=';
+        async function jsonFromGoogleApi(keyword) {
+            let baseUrl = 'https://www.googleapis.com/books/v1/volumes?q=';
+            baseUrl += keyword[0];
+            for (let i = 1; i < keyword.length; i++) {
+                baseUrl += '+' + keyword[i];
+            }
+            baseUrl += '&printType=books&startIndex=' + ((+document.getElementById('list-number').innerHTML - 1) * number_of_book);
+            const res = await fetch(baseUrl);
+            const book_json = (await res.json()).items;
+
+            let isbn = [];
+            for (let i = 0; i < book_json.length; i++) {
+                isbn.push(book_json[i]);
+            }
+            console.log(book_json);
+        }
+
+        async function viewBookList(isbn) {
+            if (0 < isbn.length) {
                 let inner_html = '<tr id="book-list-header"><th>ISBN</th><th>Title</th><th>Author(s)</th><th>Publisher</th><th>Publicing Date</th><th>Page</th><th>Spoiler</th></tr>';
-                let spoiled_book_list = [];
-                for (let i = 0; i < information.spoiled_book_list.length; i++) {
-                    spoiled_book_list.push(information.spoiled_book_list[i].isbn);
-                }
-                for (let i = 0; i < information.book_list.length; i++) {
-                    let book_json = await getBookJson(reqURL + information.book_list[i].isbn);
+                for (let i = 0; i < isbn.length; i++) {
+                    let book_json = await jsonFromOpenBD(isbn[i]);
                     console.log(book_json);
-                    if (spoiled_book_list.includes(information.book_list[i].isbn)) {
-                        inner_html += '<tr id="book-list-data" class="spoiled-book">';
-                    } else {
-                        inner_html += '<tr id="book-list-data">';
-                    }
-                    inner_html += '<td>' + book_json.onix.RecordReference + '</td>';
+                    inner_html += '<tr class="book-list-data">';
+                        inner_html += '<td>' + book_json.onix.RecordReference + '</td>';
                     inner_html += '<td>' + book_json.onix.DescriptiveDetail.TitleDetail.TitleElement.TitleText.content + '</td>';
-                    // Validate authors
                     if (book_json.onix.DescriptiveDetail.Contributor[0] != null) {
                         inner_html += '<td><a href="#" onclick="">' + book_json.onix.DescriptiveDetail.Contributor[0].PersonName.content + '</a>';
                         for (let j = 1; j < book_json.onix.DescriptiveDetail.Contributor.length; j++) {
@@ -81,8 +101,6 @@
                     }
                     inner_html += '<td>' + book_json.onix.PublishingDetail.Imprint.ImprintName + '</td>';
                     inner_html += '<td>' + book_json.onix.PublishingDetail.PublishingDate[0].Date + '</td>';
-                    
-                    // Validate page number
                     if (book_json.onix.DescriptiveDetail.Extent != null) {
                         inner_html += '<td>' + book_json.onix.DescriptiveDetail.Extent[0].ExtentValue + '</td>';
                     } else {
@@ -93,14 +111,49 @@
                 }
                 document.getElementById('book-list').innerHTML = inner_html;
             } else {
-                listUp(0);
+                let list_number = document.getElementById('list-number').innerHTML;
+                if (1 < list_number) {
+                    document.getElementById('list-number').innerHTML = +document.getElementById('list-number').innerHTML - 1;
+                }
             }
         }
 
-        async function getBookJson(reqURL) {
-            const res = await fetch(reqURL);
-            const book_json = (await res.json())[0];
-            return book_json;
+        function searchUser() {
+            let user_name = document.getElementById('user-name').value;
+            let data = {user_name: user_name};
+            socket.emit('mark-up', data);
+        }
+
+        function markUp(isbn) {
+            let list = document.getElementsByClassName('book-list-data');
+            for (let i = 0; i < list.length; i++) {
+                if (isbn.includes(list[i].cells[0].innerHTML)) {
+                    list[i].classList.add('spoiled-book');
+                } else {
+                    list[i].classList.remove('spoiled-book');
+                }
+            }
+        }
+
+        function listUp(flag) {
+            let list_number = document.getElementById('list-number').innerHTML;
+            if (flag == 0 && list_number != 1) {
+                document.getElementById('list-number').innerHTML = list_number - 1;
+                getBookList();
+            } else if (flag == 1) {
+                document.getElementById('list-number').innerHTML = +list_number + 1;
+                getBookList();
+            }
+        }
+
+        async function search() {
+            let keyword = document.getElementById('keyword').value.split(' ');
+            let isbn;
+            if (keyword[0] == '') {
+                return 0;
+            } else {
+                isbn = await jsonFromGoogleApi(keyword);
+            }
         }
 
         function spoiler(isbn) {

@@ -40,6 +40,9 @@ exports.startServer = () => {
         socket.on('book-list', (data) => {
             getBookList(id, io, data, pool);
         });
+        socket.on('mark-up', (data) => {
+            markUp(id, io, data, pool);
+        });
         socket.on('spoiler', (data) => {
             setSpoiler(id, io, data, pool);
         });
@@ -57,17 +60,28 @@ exports.startServer = () => {
 async function getBookList(id, io, data, pool) {
     let sql, values;
     try {
-        sql = 'select * from book order by isbn asc limit ?, ?;';
+        sql = 'select isbn from book order by isbn asc limit ?, ?;';
         values = [data.head - 1, data.number_of_data];
-        let book_list = await pool.query(mysql.format(sql, values));
+        let isbn = await pool.query(mysql.format(sql, values));
         let spoiled_book_list = [];
+        let information = {isbn: isbn};
+        io.to(id).emit('book-list', information);
+    } catch (err) {
+        throw new Error(err);
+    }
+}
+
+async function markUp(id, io, data, pool) {
+    let sql, values;
+    try {
+        let isbn = [];
         if (data.user_name != '') {
             sql = 'select isbn from spoiler where user_name=?;';
             values = [data.user_name];
-            spoiled_book_list = await pool.query(mysql.format(sql, values));
+            isbn = await pool.query(mysql.format(sql, values));
         }
-        let information = {book_list: book_list, spoiled_book_list: spoiled_book_list};
-        io.to(id).emit('book-list', information);
+        let information = {isbn: isbn};
+        io.to(id).emit('mark-up', information);
     } catch (err) {
         throw new Error(err);
     }
