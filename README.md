@@ -53,6 +53,7 @@ create table book_manager.user (
 ## References
 ### APIs
 - [openBD](https://openbd.jp/)
+- [楽天ブックス書籍検索API (version:2017-04-04)](https://webservice.rakuten.co.jp/api/booksbooksearch/)
 
 ### Web sites
 - [書籍検索APIのリクエストパラメータ・取得値考察](https://qiita.com/kanary/items/5ec45bbc01efd4388fdb)
