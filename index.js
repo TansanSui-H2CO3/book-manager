@@ -1,6 +1,7 @@
 // Requirements
 const mysql = require('mysql');
 const util = require('util');
+const fetch = require('node-fetch');
 let express = require('express');
 let app = express();
 app.use(express.static('source'));
@@ -8,6 +9,12 @@ let http = require('http').Server(app);
 const io = require('socket.io')(http);
 const PORT = process.env.PORT || 8080; // Default port number
 let db_information = ['', '', '', ''];
+let rakuten_app_id = '';
+
+// Set Rakuten application ID
+exports.setRakutenAppId = (id) => {
+    rakuten_app_id = id;
+}
 
 // Set DB info
 exports.setDataBaseInformation = (host, user, password, database) => {
@@ -40,6 +47,9 @@ exports.startServer = () => {
         socket.on('book-list', (data) => {
             getBookList(id, io, data, pool);
         });
+        socket.on('search', (data) => {
+            jsonFromRakten(id, io, data);
+        });
         socket.on('mark-up', (data) => {
             markUp(id, io, data, pool);
         });
@@ -69,6 +79,22 @@ async function getBookList(id, io, data, pool) {
     } catch (err) {
         throw new Error(err);
     }
+}
+
+async function jsonFromRakten(id, io, data) {
+    let reqUrl = 'https://app.rakuten.co.jp/services/api/BooksBook/Search/20170404?applicationId=' + rakuten_app_id + '&title=' + data.keyword[0];
+    for (let i = 1; i < data.keyword.length; i++) {
+        reqUrl += ' ' + data.keyword[i];
+    }
+    reqUrl += '&hits=' + data.hits + '&page=' + data.page;
+    const res = await fetch(encodeURI(reqUrl));
+    const book_json = (await res.json()).Items;
+    let isbn = [];
+    for (let i = 0; i < book_json.length; i++) {
+        isbn.push(book_json[i].Item.isbn);
+    }
+    let information = {isbn: isbn};
+    io.to(id).emit('search', information);
 }
 
 async function markUp(id, io, data, pool) {

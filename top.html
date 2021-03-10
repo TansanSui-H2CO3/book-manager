@@ -3,7 +3,7 @@
         <title>Book manager | Top page</title>
         <link rel="stylesheet" href="/css/top.css">
     </head>
-    <body onload="getBookList();searchUser();">
+    <body onload="getBookList();">
         <header>
             <a href="/"><img id="logo" src="/image/logo.svg" alt="" style="height: 60px;"></a>
         </header>
@@ -12,7 +12,7 @@
             <div id="book">
                 <h2>Book Shelf</h2>
                 <h3>Terms of Searching: <span id="searching-term">Nothing (All books are displayed)</span></h3>
-                <div>Keyword: <input id="keyword" type="text" onchange=""><button onclick="search();">Search</button></div>
+                <div>Keyword: <input id="keyword" type="text" onchange=""><button onclick="getBookList();">Search</button></div>
                 <div>User Name: <input id="user-name" type="text" onchange=""><button onclick="searchUser();">Mark up</button></div>
                 <div id="book-list-contents">
                     <table id="book-list">
@@ -38,6 +38,9 @@
             }
             viewBookList(isbn);
         });
+        socket.on('search', (information) => {
+            viewBookList(information.isbn);
+        });
         socket.on('mark-up', (information) => {
             let isbn = [];
             for (let i = 0; i < information.isbn.length; i++) {
@@ -48,8 +51,8 @@
 
         async function getBookList() {
             let keyword = document.getElementById('keyword').value.split(' ');
-            if (keyword[0] == null) {
-                await viewBookList(await (jsonFromGoogleApi(keyword)));
+            if (keyword[0] != '') {
+                search();
                 return 0;
             }
             let list_number = document.getElementById('list-number').innerHTML;
@@ -86,6 +89,7 @@
                 let inner_html = '<tr id="book-list-header"><th>ISBN</th><th>Title</th><th>Author(s)</th><th>Publisher</th><th>Publicing Date</th><th>Page</th><th>Spoiler</th></tr>';
                 for (let i = 0; i < isbn.length; i++) {
                     let book_json = await jsonFromOpenBD(isbn[i]);
+                    if (book_json == null) continue; 
                     console.log(book_json);
                     inner_html += '<tr class="book-list-data">';
                         inner_html += '<td>' + book_json.onix.RecordReference + '</td>';
@@ -146,14 +150,11 @@
             }
         }
 
-        async function search() {
-            let keyword = document.getElementById('keyword').value.split(' ');
-            let isbn;
-            if (keyword[0] == '') {
-                return 0;
-            } else {
-                isbn = await jsonFromGoogleApi(keyword);
-            }
+        function search() {
+            let list_number = document.getElementById('list-number').innerHTML;
+            let keyword = document.getElementById('keyword').value.split(/[\u3000&\x20;]/g);
+            let data = {keyword: keyword, hits: number_of_book, page: list_number};
+            socket.emit('search', data);
         }
 
         function spoiler(isbn) {
