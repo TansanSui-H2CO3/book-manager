@@ -60,8 +60,10 @@
             } else {
                 document.getElementById('book-page').innerHTML = 'No data';
             }
-            document.getElementById('book-image').innerHTML = '<img src="' + book_json.onix.CollateralDetail.SupportingResource[0].ResourceVersion[0].ResourceLink + '">';
-
+            if (book_json.onix.CollateralDetail.SupportingResource != null) {
+                document.getElementById('book-image').innerHTML = '<img src="' + book_json.onix.CollateralDetail.SupportingResource[0].ResourceVersion[0].ResourceLink + '">';
+            }
+            
             // Requirement of the spoiler list
             let data = {isbn: isbn};
             socket.emit('spoiler-list', data);

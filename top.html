@@ -30,7 +30,7 @@
     <script src="/socket.io/socket.io.js"></script>
     <script>
         const socket = io();
-        let number_of_book = 10;
+        let number_of_book = 30;
         socket.on('book-list', (information) => {
             let isbn = [];
             for (let i = 0; i < information.isbn.length; i++) {
@@ -39,7 +39,7 @@
             viewBookList(isbn);
         });
         socket.on('search', (information) => {
-            viewBookList(information.isbn);
+            viewBookList(information.isbn.sort());
         });
         socket.on('mark-up', (information) => {
             let isbn = [];
@@ -85,12 +85,12 @@
         }
 
         async function viewBookList(isbn) {
+            let inner_html = '<tr id="book-list-header"><th>ISBN</th><th>Title</th><th>Author(s)</th><th>Publisher</th><th>Publicing Date</th><th>Page</th><th>Spoiler</th></tr>';
             if (0 < isbn.length) {
-                let inner_html = '<tr id="book-list-header"><th>ISBN</th><th>Title</th><th>Author(s)</th><th>Publisher</th><th>Publicing Date</th><th>Page</th><th>Spoiler</th></tr>';
                 for (let i = 0; i < isbn.length; i++) {
                     let book_json = await jsonFromOpenBD(isbn[i]);
                     if (book_json == null) continue; 
-                    console.log(book_json);
+                    // console.log(book_json);
                     inner_html += '<tr class="book-list-data">';
                         inner_html += '<td>' + book_json.onix.RecordReference + '</td>';
                     inner_html += '<td>' + book_json.onix.DescriptiveDetail.TitleDetail.TitleElement.TitleText.content + '</td>';
@@ -113,13 +113,14 @@
                     inner_html += '<td><button class="spoiler-btn" onclick="spoiler(' + book_json.onix.RecordReference + ');">Spoiler</button></td>';
                     inner_html += '</tr>';
                 }
-                document.getElementById('book-list').innerHTML = inner_html;
             } else {
                 let list_number = document.getElementById('list-number').innerHTML;
                 if (1 < list_number) {
                     document.getElementById('list-number').innerHTML = +document.getElementById('list-number').innerHTML - 1;
+                    getBookList();
                 }
             }
+            document.getElementById('book-list').innerHTML = inner_html;
         }
 
         function searchUser() {
