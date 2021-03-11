@@ -17,13 +17,22 @@
                 <div>Page: <span id="book-page"></span></div>
                 <div><span id="book-image"></span></div>
             </div>
+            <div id="spoiler-list">
+                <table id="spoiler-table"></table>
+            </div>
             <div>
                 <button id="spoile-btn" onclick="spoile();">Spoile</button>
             </div>
         </div>
         <footer></footer>
     </body>
+    <script src="/socket.io/socket.io.js"></script>
     <script>
+        const socket = io();
+        socket.on('spoiler-list', (information) => {
+            viewSpoiler(information.spoiler_list);
+        });
+
         async function show() {
             let isbn = location.href.split('/')[location.href.split('/').length - 1];
             let book_json = await getBookJson(isbn);
@@ -33,9 +42,7 @@
                 document.getElementById('load-error').innerHTML = '#' + isbn + ' is not published.';
                 return false;
             }
-            
             document.getElementById('book-title').innerHTML = book_json.onix.DescriptiveDetail.TitleDetail.TitleElement.TitleText.content;
-            
             let author = '';
             if (book_json.onix.DescriptiveDetail.Contributor[0] != null) {
                 author = '<a href="#" onclick="">' + book_json.onix.DescriptiveDetail.Contributor[0].PersonName.content + '</a>';
@@ -46,18 +53,18 @@
                 author = 'No data'
             }
             document.getElementById('book-author').innerHTML = author;
-
             document.getElementById('book-publisher').innerHTML = book_json.onix.PublishingDetail.Imprint.ImprintName;
-            
             document.getElementById('book-publishing-date').innerHTML = book_json.onix.PublishingDetail.PublishingDate[0].Date;
-            
             if (book_json.onix.DescriptiveDetail.Extent != null) {
                 document.getElementById('book-page').innerHTML = book_json.onix.DescriptiveDetail.Extent[0].ExtentValue;
             } else {
                 document.getElementById('book-page').innerHTML = 'No data';
             }
-            
             document.getElementById('book-image').innerHTML = '<img src="' + book_json.onix.CollateralDetail.SupportingResource[0].ResourceVersion[0].ResourceLink + '">';
+
+            // Requirement of the spoiler list
+            let data = {isbn: isbn};
+            socket.emit('spoiler-list', data);
         }
 
         async function getBookJson(isbn) {
@@ -65,6 +72,20 @@
             const res = await fetch(baseURL + isbn);
             const book_json = (await res.json())[0];
             return book_json;
+        }
+
+        function viewSpoiler(spoiler_list) {
+            let inner_html = '<tr id="spoiler-list-header"><th>Date</th><th>User Name</th><th>Spoiler</th><th>Up Vote</th><th>Down Vote</th></tr>';
+            for (let i = 0; i < spoiler_list.length; i++ ) {
+                inner_html += '<tr>';
+                    inner_html += '<td>' + spoiler_list[i].spoiled_date + '</td>';
+                    inner_html += '<td>' + spoiler_list[i].user_name + '</td>';
+                    inner_html += '<td>' + spoiler_list[i].spoiler + '</td>';
+                    inner_html += '<td>' + spoiler_list[i].up_vote + '</td>';
+                    inner_html += '<td>' + spoiler_list[i].down_vote + '</td>';
+                inner_html += '</tr>';
+            }
+            document.getElementById('spoiler-table').innerHTML = inner_html;
         }
 
         function spoile() {

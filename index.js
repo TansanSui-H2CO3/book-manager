@@ -53,6 +53,9 @@ exports.startServer = () => {
         socket.on('mark-up', (data) => {
             markUp(id, io, data, pool);
         });
+        socket.on('spoiler-list', (data) => {
+            getSpoilerList(id, io, data, pool);
+        });
         socket.on('spoiler', (data) => {
             setSpoiler(id, io, data, pool);
         });
@@ -108,6 +111,19 @@ async function markUp(id, io, data, pool) {
         }
         let information = {isbn: isbn};
         io.to(id).emit('mark-up', information);
+    } catch (err) {
+        throw new Error(err);
+    }
+}
+
+async function getSpoilerList(id, io, data, pool) {
+    let sql, values;
+    try {
+        sql = 'select * from spoiler where isbn=? and visible=?';
+        values = [data.isbn, true];
+        let spoiler_list = await pool.query(mysql.format(sql, values));
+        let information = {spoiler_list: spoiler_list};
+        io.to(id).emit('spoiler-list', information);
     } catch (err) {
         throw new Error(err);
     }
