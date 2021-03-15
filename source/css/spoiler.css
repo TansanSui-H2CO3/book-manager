@@ -1,0 +1,30 @@
+body {
+    width: 100%;
+}
+
+.yoko {
+    display: inline-block;
+    vertical-align: top;
+}
+
+#spoiler-list {
+    width: 100%;
+}
+
+.sub-title {
+    text-align: center;
+}
+
+#book-information {
+    width: 20%;
+}
+
+#spoiler {
+    width: 70%;
+}
+
+.vote {
+    display: inline-block;
+    margin-left: 5px;
+    margin-right: 5px;
+}

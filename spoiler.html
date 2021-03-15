@@ -6,10 +6,11 @@
         <head>
             <a href="/"><img id="logo" src="/image/logo.svg" alt="" style="height: 60px;"></a>
         </head>
-        <div id="main-content">
-            <h1>Spoiler of #<span id="isbn"></span></h1>
-            <span id="load-error"></span>
-            <div id="book-information">
+        <span id="load-error"></span>
+        <div id="main-content">    
+            <div id="book-information" class="yoko">
+                <h2 class="sub-title">Book Information</h2>
+                <div>ISBN: <span id="isbn"></span></div>
                 <div>Title: <span id="book-title"></span></div>
                 <div>Author(s): <span id="book-author"></span></div>
                 <div>Publisher: <span id="book-publisher"></span></div>
@@ -17,11 +18,12 @@
                 <div>Page: <span id="book-page"></span></div>
                 <div><span id="book-image"></span></div>
             </div>
-            <div id="spoiler-list">
-                <table id="spoiler-table"></table>
-            </div>
-            <div>
-                <button id="spoile-btn" onclick="spoile();">Spoile</button>
+            <div id="spoiler" class="yoko">
+                <h2 class="sub-title">Spoilers</h2>
+                <div id="spoiler-list"></div>
+                <div>
+                    <button id="spoile-btn" onclick="spoile();">Spoile</button>
+                </div>
             </div>
         </div>
         <footer></footer>
@@ -77,17 +79,17 @@
         }
 
         function viewSpoiler(spoiler_list) {
-            let inner_html = '<tr id="spoiler-list-header"><th>Date</th><th>User Name</th><th>Spoiler</th><th>Up Vote</th><th>Down Vote</th></tr>';
+            let inner_html = '';
             for (let i = 0; i < spoiler_list.length; i++ ) {
-                inner_html += '<tr>';
-                    inner_html += '<td>' + spoiler_list[i].spoiled_date + '</td>';
-                    inner_html += '<td>' + spoiler_list[i].user_name + '</td>';
-                    inner_html += '<td>' + spoiler_list[i].spoiler + '</td>';
-                    inner_html += '<td>' + spoiler_list[i].up_vote + '</td>';
-                    inner_html += '<td>' + spoiler_list[i].down_vote + '</td>';
-                inner_html += '</tr>';
+                inner_html += '<div class="spoiler">';
+                    inner_html += '<div class="user-name">' + spoiler_list[i].user_name + '</div>';
+                    inner_html += '<div class="spoiled-date">' + spoiler_list[i].spoiled_date + '</div>';
+                    inner_html += '<div class="spoiler-content">' + spoiler_list[i].spoiler + '</div>';
+                    inner_html += '<div class="up-vote vote">' + spoiler_list[i].up_vote + '</div>';
+                    inner_html += '<div class="down-vote vote">' + spoiler_list[i].down_vote + '</div>';
+                inner_html += '</div>';
             }
-            document.getElementById('spoiler-table').innerHTML = inner_html;
+            document.getElementById('spoiler-list').innerHTML = inner_html;
         }
 
         function spoile() {
@@ -95,4 +97,5 @@
             window.location.href = '/spoiling/' + isbn;
         }
     </script>
+    <link rel="stylesheet" href="/css/spoiler.css">
 </html>
